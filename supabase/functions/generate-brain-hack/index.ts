@@ -101,8 +101,8 @@ async function generateHackForDate(
   user: any,
   recentHacks: string
 ) {
-  const mainGoal = user.main_goal || 'improve mental performance'
-  const mainStruggle = user.main_struggle || 'staying focused'
+  const mainGoal = user.goal || user.main_goal || 'improve mental performance'
+  const mainStruggle = user.biggest_struggle || user.main_struggle || 'staying focused'
   const progress = user.rewire_progress || 0
   const skillLevel = user.skill_level || 'beginner'
 
@@ -115,6 +115,16 @@ USER PROFILE:
 - Progress: ${progress}%
 
 RECENTLY USED (must be completely different): ${recentHacks}
+
+CRITICAL INSTRUCTIONS FOR PERSONALIZATION:
+The user's specific goal is: "${mainGoal}"
+The ACTION ITEM (page 3) MUST be directly related to this goal.
+
+EXAMPLES:
+- If goal is "Build better habits" → Action item should involve habit formation
+- If goal is "Overcome procrastination" → Action item should involve starting a task  
+- If goal is "Reduce anxiety/stress" → Action item should involve calming techniques
+- If custom goal provided → Action item should directly address that specific goal
 
 REQUIREMENTS FOR THE HACK:
 1. Must target a SPECIFIC brain mechanism (dopamine circuits, amygdala threat response, prefrontal cortex activation, default mode network, basal ganglia habit loops, etc.)
@@ -146,7 +156,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
   "quote": "Short inspirational quote (max 15 words)",
   "explanation": "Full step-by-step instructions (3-4 sentences)",
   "neuroscience": "Deep dive into brain mechanism (2-3 sentences with specific regions/chemicals)",
-  "personalization": "Why this helps YOUR specific goal (1-2 sentences connecting to ${mainGoal})",
+  "personalization": "Why this helps YOUR specific goal: ${mainGoal} (1-2 sentences connecting DIRECTLY to their goal)",
   "barrier": "${mainStruggle}"
 }`
 

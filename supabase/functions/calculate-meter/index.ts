@@ -1,6 +1,7 @@
 // supabase/functions/calculate-meter/index.ts
 // UPDATED WITH NEUROSCIENCE-BACKED LOGARITHMIC FORMULA
 // FIXED: Now reads from daily_tasks table (where your data actually is)
+// FIXED: Auto-creates user if doesn't exist (handles anonymous sign-ins)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
@@ -40,15 +41,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get user's current state
-    const { data: user, error: userError } = await supabaseClient
+    // Get user's current state (or create if doesn't exist)
+    let { data: user, error: userError } = await supabaseClient
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
 
+    // If user doesn't exist, create them (handles anonymous sign-ins)
     if (userError || !user) {
-      throw new Error('User not found')
+      console.log(`📝 Creating new user record for ${userId}`)
+      
+      const { data: newUser, error: createError } = await supabaseClient
+        .from('users')
+        .insert({
+          id: userId,
+          email: `anon-${userId}@braintwin.app`, // Placeholder for anonymous users
+          main_struggle: 'Not yet specified', // Required field - will be set during onboarding
+          skill_level: 'foggy',
+          rewire_progress: 0,
+          current_streak: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (createError || !newUser) {
+        throw new Error(`Failed to create user: ${createError?.message}`)
+      }
+      
+      user = newUser
+      console.log(`✅ New user created successfully`)
     }
 
     // Get completed daily tasks (this is where your completions are)
