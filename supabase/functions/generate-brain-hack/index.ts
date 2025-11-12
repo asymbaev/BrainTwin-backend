@@ -46,8 +46,8 @@ async function generateRemainingAudioInBackground(
   try {
     console.log('🎙️ Generating pages 2-3 audio in background...')
     const texts = [
-      `The neuroscience behind this hack: ${brainHack.neuroscience}. ${brainHack.personalization || ''}`,
-      `Your action plan: ${brainHack.explanation}. Today's challenge: Apply this hack when you face ${brainHack.barrier} today.`
+      `Here's the brain hack: ${brainHack.neuroscience}. ${brainHack.personalization || ''}`,
+      `Here's what to do: ${brainHack.explanation}. Today's challenge: Try this when you face ${brainHack.barrier} today.`
     ]
 
     const audioUrls: string[] = []
@@ -106,57 +106,97 @@ async function generateHackForDate(
   const progress = user.rewire_progress || 0
   const skillLevel = user.skill_level || 'beginner'
 
-  const prompt = `You are Dr. Andrew Huberman meets a Stanford neuroscience researcher. Generate a cutting-edge, research-backed brain hack.
+  const prompt = `You're a neuroscience coach who explains brain hacks like you're talking to a friend over coffee. Generate a SPECIFIC, actionable brain hack.
 
-USER PROFILE:
-- Main Goal: ${mainGoal}
-- Primary Challenge: ${mainStruggle}
-- Current Level: ${skillLevel}
-- Progress: ${progress}%
+USER CONTEXT:
+- Goal: ${mainGoal}
+- Challenge: ${mainStruggle}
+- Level: ${skillLevel}
+- Recently used (make this COMPLETELY DIFFERENT): ${recentHacks}
 
-RECENTLY USED (must be completely different): ${recentHacks}
+YOUR MISSION: Create a brain hack that feels like discovering a secret cheat code for your mind.
 
-CRITICAL INSTRUCTIONS FOR PERSONALIZATION:
-The user's specific goal is: "${mainGoal}"
-The ACTION ITEM (page 3) MUST be directly related to this goal.
+WRITING STYLE RULES:
+✅ DO: Write like a human. Use "your brain" not "the brain". Say "you're" not "one is".
+✅ DO: Use simple words. Say "trick" not "mechanism". Say "boost" not "optimize neural transmission efficiency".
+✅ DO: Make it feel like revealing a secret: "Here's what most people don't know..."
+❌ DON'T: Sound like a textbook. No "crucial for executive functions" or "activates neural pathways associated with"
+❌ DON'T: Use overly formal language. No "engaging this area" or "by revitalizing these pathways"
+❌ DON'T: Just explain how something works. Give them a TRICK to exploit.
 
-EXAMPLES:
-- If goal is "Build better habits" → Action item should involve habit formation
-- If goal is "Overcome procrastination" → Action item should involve starting a task  
-- If goal is "Reduce anxiety/stress" → Action item should involve calming techniques
-- If custom goal provided → Action item should directly address that specific goal
+STRUCTURE:
 
-REQUIREMENTS FOR THE HACK:
-1. Must target a SPECIFIC brain mechanism (dopamine circuits, amygdala threat response, prefrontal cortex activation, default mode network, basal ganglia habit loops, etc.)
-2. Must be based on ACTUAL neuroscience research (not generic productivity advice)
-3. Must be practical and take 2-5 minutes to apply
-4. Should feel advanced/cutting-edge, not something everyone already knows
-5. Use technical language but explain it clearly
+PART 1 - THE HOOK (Page 1):
+A punchy promise that sounds exciting, not generic. Make them curious.
+❌ BAD: "Unlock your mind's potential and enhance your mental clarity"
+✅ GOOD: "Trick your brain into loving hard work"
+✅ GOOD: "Rewire anxiety in 90 seconds using breath"
+✅ GOOD: "Turn invisible anxiety into visible action"
 
-EXAMPLES OF GOOD HACKS (for reference, don't copy):
-- "Dopamine Stacking Protocol": Do something enjoyable for 30 seconds immediately before the hard task to prime your reward circuits
-- "Amygdala Bypass Breathing": 2 inhales through nose, 1 long exhale to activate parasympathetic system and reduce threat response
-- "Prefrontal Priming Visualization": Spend 90 seconds mentally rehearsing the first step in vivid detail to activate motor planning circuits
-- "Neurochemical State Shift": 10 jumping jacks + cold water on wrists to trigger norepinephrine release and shift brain state
+PART 2 - THE BRAIN HACK (Page 2):
+Explain the psychological principle/trick in detail. This is ONLY the explanation - NO action steps yet.
 
-GENERATE TWO PARTS:
-PART 1 - QUOTE (for first screen):
-A short, punchy, inspirational statement about the hack (1 sentence, max 15 words). Think of it like a mantra or daily affirmation.
+🎯 FORMULA: [Surprising fact] + [Why it works] + [The psychology behind it] + [Why this matters for them]
 
-PART 2 - DEEP DIVE (for second screen):
-- Full step-by-step explanation (3-4 sentences)
-- Specific neuroscience mechanism (2-3 sentences, name brain regions/neurotransmitters)
-- Personalized connection to their goal: "${mainGoal}" (1-2 sentences on why THIS hack helps THEM specifically)
+CRITICAL: Write 5-6 sentences. Make it detailed and interesting. DO NOT include any "here's what to do" or action steps - those go in Part 3.
 
-TARGET THEIR SPECIFIC CHALLENGE: ${mainStruggle}
+EXAMPLES OF GREAT BRAIN HACK EXPLANATIONS (Page 2 only - notice NO action steps):
 
-Return ONLY valid JSON (no markdown, no code blocks):
+Example 1 (Dopamine Hack):
+"Your brain releases dopamine BEFORE you get a reward, not after - it's predicting the good feeling, which is why you get excited just thinking about pizza. This prediction system is how motivation actually works; your brain needs to expect something good to generate the energy to act. Here's the wild part: your brain can't tell the difference between a reward that comes from the activity itself versus a reward you artificially attach to it. If you consistently pair something enjoyable with a hard task, your dopamine system starts firing for the hard task because it's learned to predict the good feeling. This is literally how you manufacture motivation out of thin air - you're hijacking your brain's prediction algorithm. It's the same mechanism that makes Pavlov's dogs salivate at a bell."
+
+Example 2 (Anxiety Kill Switch):
+"Your brain's fear center (the amygdala) is surprisingly dumb - it responds to breathing patterns, not your thoughts or logic. When you're anxious, your breathing gets shallow and fast, which the amygdala reads as 'we're in danger, stay alert!' It's a feedback loop: anxiety changes your breath, your breath signals more danger. But here's the exploit: the amygdala will believe whatever your breathing tells it, even if you fake it. A specific breathing pattern - two sharp inhales through your nose followed by a long exhale - is a hardwired 'threat over' signal. Why? Because that's the exact pattern you breathe after crying, and your nervous system has evolved to interpret it as 'the stressful event has ended.' You can literally override your fear response by speaking your amygdala's language."
+
+Example 3 (Pattern Interrupt):
+"Your brain runs on autopilot 95% of the time because conscious thinking burns tons of energy. Every repeated action carves a deeper neural groove - like a path in the woods that gets easier to walk each time. The problem is, these grooves don't care if the habit is good or bad; your brain just wants to save energy. But here's the hack: autopilot needs everything to be the same. When something unexpected happens, your autopilot crashes for a split second, and your conscious brain has to take over. That split second is your window to choose differently. It's like finding a glitch in your brain's code. The more bizarre the interruption, the bigger the pause - your pattern-matcher literally doesn't know what to do with novelty."
+
+Example 4 (Visualization Power):
+"Your brain can't tell the difference between vividly imagining something and actually doing it - the same neurons fire in both cases. When you imagine lifting your arm in detail, your motor cortex lights up as if you're actually moving. This isn't just interesting; it's a performance cheat code. Athletes use this to practice without physical fatigue, and your brain builds the neural pathways either way. The key word is 'vividly' - vague daydreaming doesn't work, but detailed mental rehearsal where you feel the sensations and see it clearly creates real neural changes. You're essentially doing reps in your brain gym. The wild part? Your brain then recognizes the real action as familiar, making it easier to execute because you've already 'done' it."
+
+Example 5 (Attention Filter Programming):
+"Your brain has a filter called the reticular activating system that deletes 99% of what you see and hear - you'd go insane otherwise. It's like a bouncer at a club, only letting in what you've told it is important. When you decide you want something specific, you're programming this filter to highlight it. Ever notice how you suddenly see red cars everywhere after thinking about buying one? They were always there; your filter just started letting them through. This is the neuroscience behind why 'manifesting' sometimes works - not magic, just attention. The more specific you are about what you're looking for, the better your filter works. Your brain becomes a heat-seeking missile for opportunities you've been walking past every day."
+
+WRITE IN THIS STYLE: Conversational, detailed (5-6 sentences), surprising, NO ACTION STEPS.
+
+PART 3 - THE ACTION PLAN (Page 3):
+Detailed, sophisticated action steps. Make it 5-6 sentences with specific, practical instructions that sound smart and actionable - NOT childish or silly.
+
+❌ BAD: "Clap your hands twice when you lose focus" (sounds ridiculous)
+❌ BAD: "Do 10 jumping jacks" (too simple, sounds like kindergarten)
+❌ BAD: "Tap the table" (childish)
+
+✅ GOOD: Specific, multi-step instructions that feel professional and actually useful
+
+EXAMPLES OF SOPHISTICATED ACTION PLANS (5-6 sentences each):
+
+Example 1 (Dopamine Stacking):
+"Identify the exact moment you typically procrastinate on starting work - is it opening your laptop, starting a specific task, or sitting at your desk? Right before that moment, do something you genuinely enjoy for exactly 30 seconds: sip your favorite coffee, listen to 30 seconds of a song that energizes you, or look at a photo that makes you smile. The key is consistency - same enjoyable action, same timing, every single time. After 30 seconds, immediately transition into the work without any gap. Track this for one week and notice how your brain starts anticipating the work differently. After a week, you can reduce the pre-work activity to 10 seconds as the association strengthens."
+
+Example 2 (Pattern Interrupt for Bad Habits):
+"Choose the bad habit you want to break and identify the exact trigger point - the moment right before you reach for your phone, open social media, or grab junk food. At that trigger point, insert a completely unexpected physical disruption: stand up and walk to a different room, put on a specific song that requires you to stop what you're doing, or hold an ice cube for 10 seconds. The disruption must be unusual enough that your brain's autopilot can't ignore it. Do this every single time you catch the trigger for three days straight. Your brain will start pausing automatically at that trigger point, giving you a conscious choice instead of running the automatic program."
+
+Example 3 (Anxiety Breathing Protocol):
+"The moment you notice anxiety building - tight chest, racing thoughts, or shallow breathing - stop what you're doing completely. Take two sharp, quick inhales through your nose (like you're sniffing something twice quickly), then immediately exhale slowly through your mouth for a count of 5-8 seconds. The double inhale is critical - it needs to be two distinct sniffs, not one long breath. Repeat this breathing pattern 8-10 times consecutively, focusing only on the physical sensation of the breath. After completing the cycles, take 30 seconds to notice how your body feels different. Use this exact pattern every time you feel anxiety creeping in, and your nervous system will start responding faster each time."
+
+Example 4 (Visualization Practice):
+"Pick one specific task you've been avoiding and break it down to just the first 2 minutes of action - not the whole project, just the start. Close your eyes and spend 90 seconds mentally rehearsing those first 2 minutes in vivid detail: see yourself in the space where you'll do it, feel the physical sensations, hear the sounds, and watch yourself moving through each micro-step. Make it so detailed you could describe every movement. After the visualization, set a 2-minute timer and immediately do what you just imagined - don't think, just execute. Do this visualization-execution combo for the same task three days in a row. By day three, starting will feel eerily familiar because your brain has already practiced it multiple times."
+
+Example 5 (Focus Filtering):
+"Before starting any work session, write down one ultra-specific sentence describing exactly what success looks like for this session - not vague goals like 'make progress,' but concrete outcomes like 'draft the introduction section with three key points' or 'solve the first five client emails in my inbox.' Read this sentence out loud twice, emphasizing the specific words that define success. Place this written goal where you can see it throughout your work session. Set a timer for 25 minutes and work only on achieving that specific outcome, checking the goal statement whenever you feel your attention drifting. At the 25-minute mark, review what you accomplished against your specific statement, then decide whether to continue this task or switch. This trains your brain's attention filter to screen out everything except your defined target."
+
+Example 6 (Morning Cognitive Priming):
+"Within the first 15 minutes of waking up, before checking any devices, spend 5 minutes engaging with something intellectually challenging: read a dense article about a topic you're curious about, work through a logic puzzle, or study 10 new words in a language you're learning. The material should be genuinely difficult enough that you have to focus completely. After the 5 minutes, write down three observations or insights about what you just learned in your own words. This morning cognitive engagement activates your prefrontal cortex early, setting a baseline of mental sharpness for the rest of the day. Do this consistently for one week and notice how much easier it becomes to enter deep focus later in the day. The key is doing it before any dopamine-spiking activities like social media or news, which would hijack this priming effect."
+
+WRITE ACTION PLANS LIKE THESE: Detailed (5-6 sentences), specific steps, sophisticated language, practical and actionable - NOT childish.
+
+Return ONLY valid JSON:
 {
-  "hackName": "Technical name (e.g., 'Prefrontal Activation Protocol')",
-  "quote": "Short inspirational quote (max 15 words)",
-  "explanation": "Full step-by-step instructions (3-4 sentences)",
-  "neuroscience": "Deep dive into brain mechanism (2-3 sentences with specific regions/chemicals)",
-  "personalization": "Why this helps YOUR specific goal: ${mainGoal} (1-2 sentences connecting DIRECTLY to their goal)",
+  "hackName": "Cool name, not generic (e.g., 'Dopamine Hijack', 'Anxiety Kill Switch', '60-Second Mind Prep')",
+  "quote": "Punchy hook that sounds exciting (max 12 words)",
+  "neuroscience": "The brain hack explained in detail - 5-6 sentences, conversational tone, NO action steps, just the psychological principle and why it works",
+  "explanation": "Detailed, sophisticated action plan - 5-6 sentences with specific, practical steps that sound professional and smart, NOT childish (no 'clap your hands' type stuff)",
+  "personalization": "One sentence connecting this hack to their goal: ${mainGoal}",
   "barrier": "${mainStruggle}"
 }`
 
@@ -315,7 +355,7 @@ serve(async (req) => {
           neuroscience: todayHack.hack_neuroscience,
           personalization: todayHack.hack_personalization || '',
           barrier: user.main_struggle || 'focus',
-          isCompleted: !!todayHack.completed_at,
+          isCompleted: !todayHack.completed_at,
           audioUrls: [
             todayHack.audio_page1_url,
             todayHack.audio_page2_url,
