@@ -355,7 +355,7 @@ serve(async (req) => {
           neuroscience: todayHack.hack_neuroscience,
           personalization: todayHack.hack_personalization || '',
           barrier: user.main_struggle || 'focus',
-          isCompleted: !todayHack.completed_at,
+          isCompleted: !!todayHack.completed_at,
           audioUrls: [
             todayHack.audio_page1_url,
             todayHack.audio_page2_url,
