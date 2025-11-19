@@ -20,11 +20,17 @@ interface RequestBody {
 interface ResponseBody {
   userId: string
   isNewUser: boolean
-  sessionToken?: string
+  userData?: {
+    name?: string
+    age?: number
+    goal?: string
+    main_struggle?: string
+    skill_level?: string
+    is_premium?: boolean
+  }
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -36,7 +42,7 @@ serve(async (req) => {
       throw new Error('Missing originalTransactionId')
     }
 
-    console.log(`🎫 Processing receipt: ${originalTransactionId}`)
+    console.log(`🎫 Identifying user from receipt: ${originalTransactionId}`)
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -50,10 +56,16 @@ serve(async (req) => {
       .eq('original_transaction_id', originalTransactionId)
       .maybeSingle()
 
+    if (searchError) {
+      console.error('❌ Search error:', searchError)
+      throw searchError
+    }
+
+    // USER EXISTS - Update and return
     if (existingUser) {
-      console.log(`✅ User already exists: ${existingUser.id}`)
+      console.log(`✅ Existing user found: ${existingUser.id}`)
       
-      // Update subscription status if needed
+      // Update subscription status
       await supabaseClient
         .from('users')
         .update({
@@ -66,7 +78,15 @@ serve(async (req) => {
 
       const response: ResponseBody = {
         userId: existingUser.id,
-        isNewUser: false
+        isNewUser: false,
+        userData: {
+          name: existingUser.name,
+          age: existingUser.age,
+          goal: existingUser.goal,
+          main_struggle: existingUser.main_struggle,
+          skill_level: existingUser.skill_level,
+          is_premium: existingUser.is_premium
+        }
       }
 
       return new Response(
@@ -75,7 +95,7 @@ serve(async (req) => {
       )
     }
 
-    // Create new user
+    // USER DOES NOT EXIST - Create new user
     console.log(`📝 Creating new user for receipt: ${originalTransactionId}`)
 
     const newUser: any = {
@@ -115,7 +135,15 @@ serve(async (req) => {
 
     const response: ResponseBody = {
       userId: createdUser.id,
-      isNewUser: true
+      isNewUser: true,
+      userData: {
+        name: createdUser.name,
+        age: createdUser.age,
+        goal: createdUser.goal,
+        main_struggle: createdUser.main_struggle,
+        skill_level: createdUser.skill_level,
+        is_premium: createdUser.is_premium
+      }
     }
 
     return new Response(
