@@ -11,6 +11,7 @@ interface RequestBody {
   onboardingData?: {
     name?: string
     age?: number
+    mood?: string
     goal?: string
     struggle?: string
     preferredTime?: string
@@ -65,15 +66,34 @@ serve(async (req) => {
     if (existingUser) {
       console.log(`✅ Existing user found: ${existingUser.id}`)
       
-      // Update subscription status
+      // Prepare update object
+      const updates: any = {
+        is_premium: true,
+        has_subscribed: true,
+        subscription_status: 'active',
+        updated_at: new Date().toISOString()
+      }
+
+      // Update existing user with onboarding data if provided
+      if (onboardingData) {
+        if (onboardingData.name) updates.name = onboardingData.name
+        if (onboardingData.age) updates.age = onboardingData.age
+        if (onboardingData.mood) updates.current_mood = onboardingData.mood
+        if (onboardingData.goal) updates.goal = onboardingData.goal
+        if (onboardingData.struggle) updates.main_struggle = onboardingData.struggle
+        if (onboardingData.preferredTime) updates.preferred_time = onboardingData.preferredTime
+        
+        console.log(`📝 Updating existing user with onboarding data:`, {
+          name: onboardingData.name,
+          age: onboardingData.age,
+          mood: onboardingData.mood,
+          goal: onboardingData.goal
+        })
+      }
+
       await supabaseClient
         .from('users')
-        .update({
-          is_premium: true,
-          has_subscribed: true,
-          subscription_status: 'active',
-          updated_at: new Date().toISOString()
-        })
+        .update(updates)
         .eq('id', existingUser.id)
 
       const response: ResponseBody = {
@@ -101,6 +121,7 @@ serve(async (req) => {
     const newUser: any = {
       original_transaction_id: originalTransactionId,
       email: `${originalTransactionId}@receipt.braintwin.app`,
+      main_struggle: 'focus', // default
       skill_level: 'foggy',
       rewire_progress: 0,
       current_streak: 0,
@@ -115,9 +136,18 @@ serve(async (req) => {
     if (onboardingData) {
       if (onboardingData.name) newUser.name = onboardingData.name
       if (onboardingData.age) newUser.age = onboardingData.age
+      if (onboardingData.mood) newUser.current_mood = onboardingData.mood
       if (onboardingData.goal) newUser.goal = onboardingData.goal
       if (onboardingData.struggle) newUser.main_struggle = onboardingData.struggle
       if (onboardingData.preferredTime) newUser.preferred_time = onboardingData.preferredTime
+      
+      console.log(`📝 Creating new user with onboarding data:`, {
+        name: onboardingData.name,
+        age: onboardingData.age,
+        mood: onboardingData.mood,
+        goal: onboardingData.goal,
+        struggle: onboardingData.struggle
+      })
     }
 
     const { data: createdUser, error: createError } = await supabaseClient

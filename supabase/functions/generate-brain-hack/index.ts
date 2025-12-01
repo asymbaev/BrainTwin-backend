@@ -10,6 +10,36 @@ interface HackRequest {
   userId: string
 }
 
+// ✅ Helper: Get mood context for AI prompt
+function getMoodContext(mood: string): string {
+  const contexts: Record<string, string> = {
+    'overwhelmed': 'feeling stressed and burdened by responsibilities',
+    'anxious': 'experiencing worry and nervous energy',
+    'low_energy': 'feeling tired, unmotivated, or drained',
+    'neutral': 'in a balanced, default state',
+    'calm': 'feeling peaceful and centered',
+    'good': 'in a positive, content state',
+    'motivated': 'feeling driven and ready to act',
+    'inspired': 'experiencing high energy and creative flow'
+  }
+  return contexts[mood] || 'in a neutral state'
+}
+
+// ✅ Helper: Get mood-specific guidance for hack generation
+function getMoodGuidance(mood: string): string {
+  const guidance: Record<string, string> = {
+    'overwhelmed': 'Focus on grounding techniques and stress regulation. User needs immediate relief and clarity.',
+    'anxious': 'Emphasize anxiety-reduction hacks like breathwork or sensory grounding. Help them regain control.',
+    'low_energy': 'Provide activation techniques and motivational hacks. They need energy boost strategies.',
+    'neutral': 'Balance between challenge and support. Standard personalization approach.',
+    'calm': 'Build on their stability. Offer growth-oriented hacks they can implement smoothly.',
+    'good': 'Leverage their positive state. Suggest ambitious but achievable techniques.',
+    'motivated': 'Channel their drive. Provide high-impact, challenging hacks.',
+    'inspired': 'Match their high energy. Suggest creative, advanced techniques.'
+  }
+  return guidance[mood] || 'Provide balanced, practical techniques.'
+}
+
 // Helper to generate audio via TTS
 async function generateAudio(text: string, voice: string = 'nova'): Promise<Uint8Array> {
   const response = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -103,16 +133,24 @@ async function generateHackForDate(
 ) {
   const mainGoal = user.goal || user.main_goal || 'improve mental performance'
   const mainStruggle = user.biggest_struggle || user.main_struggle || 'staying focused'
+  const currentMood = user.current_mood || 'neutral'
   const progress = user.rewire_progress || 0
   const skillLevel = user.skill_level || 'beginner'
+
+  // ✅ Get mood-specific context and guidance
+  const moodContext = getMoodContext(currentMood)
+  const moodGuidance = getMoodGuidance(currentMood)
 
   const prompt = `You're a neuroscience coach who explains brain hacks like you're talking to a friend over coffee. Generate a SPECIFIC, actionable brain hack.
 
 USER CONTEXT:
 - Goal: ${mainGoal}
 - Challenge: ${mainStruggle}
+- Current Mental State: ${currentMood} (${moodContext})
 - Level: ${skillLevel}
 - Recently used (make this COMPLETELY DIFFERENT): ${recentHacks}
+
+✅ IMPORTANT: This is the user's FIRST brain hack. Tailor it to their current mental state (${currentMood}). ${moodGuidance}
 
 YOUR MISSION: Create a brain hack that feels like discovering a secret cheat code for your mind.
 
@@ -146,41 +184,30 @@ Example 1 (Dopamine Hack):
 "Your brain releases dopamine BEFORE you get a reward, not after - it's predicting the good feeling, which is why you get excited just thinking about pizza. This prediction system is how motivation actually works; your brain needs to expect something good to generate the energy to act. Here's the wild part: your brain can't tell the difference between a reward that comes from the activity itself versus a reward you artificially attach to it. If you consistently pair something enjoyable with a hard task, your dopamine system starts firing for the hard task because it's learned to predict the good feeling. This is literally how you manufacture motivation out of thin air - you're hijacking your brain's prediction algorithm. It's the same mechanism that makes Pavlov's dogs salivate at a bell."
 
 Example 2 (Anxiety Kill Switch):
-"Your brain's fear center (the amygdala) is surprisingly dumb - it responds to breathing patterns, not your thoughts or logic. When you're anxious, your breathing gets shallow and fast, which the amygdala reads as 'we're in danger, stay alert!' It's a feedback loop: anxiety changes your breath, your breath signals more danger. But here's the exploit: the amygdala will believe whatever your breathing tells it, even if you fake it. A specific breathing pattern - two sharp inhales through your nose followed by a long exhale - is a hardwired 'threat over' signal. Why? Because that's the exact pattern you breathe after crying, and your nervous system has evolved to interpret it as 'the stressful event has ended.' You can literally override your fear response by speaking your amygdala's language."
+"Your brain's fear center (the amygdala) is surprisingly dumb - it responds to breathing patterns, not your thoughts or logic. When you're anxious, your breathing gets shallow and fast, which the amygdala reads as 'we're in danger, stay alert!' It's a feedback loop: anxiety changes your breath, your breath signals more danger. But here's the exploit: the amygdala will believe whatever your breathing tells it, even if you fake it. A specific breathing pattern - two sharp inhales through your nose followed by a long exhale - is a hardwired 'threat over' signal. Why? Because that's the exact pattern you breathe after crying, and your nervous system has evolved to interpret it as 'the stressful event has ended.' You're literally speaking your brain's native language to tell it the emergency is over."
 
-Example 3 (Pattern Interrupt):
-"Your brain runs on autopilot 95% of the time because conscious thinking burns tons of energy. Every repeated action carves a deeper neural groove - like a path in the woods that gets easier to walk each time. The problem is, these grooves don't care if the habit is good or bad; your brain just wants to save energy. But here's the hack: autopilot needs everything to be the same. When something unexpected happens, your autopilot crashes for a split second, and your conscious brain has to take over. That split second is your window to choose differently. It's like finding a glitch in your brain's code. The more bizarre the interruption, the bigger the pause - your pattern-matcher literally doesn't know what to do with novelty."
-
-Example 4 (Visualization Power):
-"Your brain can't tell the difference between vividly imagining something and actually doing it - the same neurons fire in both cases. When you imagine lifting your arm in detail, your motor cortex lights up as if you're actually moving. This isn't just interesting; it's a performance cheat code. Athletes use this to practice without physical fatigue, and your brain builds the neural pathways either way. The key word is 'vividly' - vague daydreaming doesn't work, but detailed mental rehearsal where you feel the sensations and see it clearly creates real neural changes. You're essentially doing reps in your brain gym. The wild part? Your brain then recognizes the real action as familiar, making it easier to execute because you've already 'done' it."
-
-Example 5 (Attention Filter Programming):
-"Your brain has a filter called the reticular activating system that deletes 99% of what you see and hear - you'd go insane otherwise. It's like a bouncer at a club, only letting in what you've told it is important. When you decide you want something specific, you're programming this filter to highlight it. Ever notice how you suddenly see red cars everywhere after thinking about buying one? They were always there; your filter just started letting them through. This is the neuroscience behind why 'manifesting' sometimes works - not magic, just attention. The more specific you are about what you're looking for, the better your filter works. Your brain becomes a heat-seeking missile for opportunities you've been walking past every day."
-
-WRITE IN THIS STYLE: Conversational, detailed (5-6 sentences), surprising, NO ACTION STEPS.
+Example 3 (Focus Anchor):
+"Your attention is controlled by what's called the Reticular Activating System (RAS), which is basically a filter that decides what makes it into your conscious awareness. Every single second, you're bombarded with millions of bits of sensory information, and your RAS filters 99% of it out so you don't go insane. Here's the hack: your RAS prioritizes anything you've recently told it is important. When you write down a specific goal before starting work, you're programming your RAS to flag anything related to that goal as 'important' and filter out everything else. This is why, after you decide to buy a red car, you suddenly see red cars everywhere - they were always there, but now your RAS is letting them through. You can weaponize this filtering system to create tunnel vision for your work by explicitly telling your brain what to notice."
 
 PART 3 - THE ACTION PLAN (Page 3):
-Detailed, sophisticated action steps. Make it 5-6 sentences with specific, practical instructions that sound smart and actionable - NOT childish or silly.
+NOW give detailed, sophisticated, specific steps. Write 5-6 sentences with practical instructions.
 
-❌ BAD: "Clap your hands twice when you lose focus" (sounds ridiculous)
-❌ BAD: "Do 10 jumping jacks" (too simple, sounds like kindergarten)
-❌ BAD: "Tap the table" (childish)
+✅ SOPHISTICATED means: Detailed instructions, specific timing, concrete steps - NOT childish stuff like "clap your hands" or "jump up and down"
+✅ ACTIONABLE means: They can DO this today, specific enough to follow
 
-✅ GOOD: Specific, multi-step instructions that feel professional and actually useful
+EXAMPLES OF GREAT ACTION PLANS (Page 3 - detailed, sophisticated, NOT childish):
 
-EXAMPLES OF SOPHISTICATED ACTION PLANS (5-6 sentences each):
+Example 1 (Pattern Interrupt):
+"The next time you catch yourself doing the habit you want to break, immediately do something physically jarring that interrupts your autopilot: stand up abruptly, snap your fingers loudly, or say "STOP" out loud. Then, physically move to a different location - even just 10 feet away - before doing anything else. Your brain runs habits in loops tied to specific contexts and movements, and this pattern interrupt literally breaks the neural sequence mid-execution. In the new location, spend 15 seconds doing a completely unrelated physical action: do 5 jumping jacks, shake out your arms, or spin around twice. The disruption must be unusual enough that your brain's autopilot can't ignore it. Do this every single time you catch the trigger for three days straight. Your brain will start pausing automatically at that trigger point, giving you a conscious choice instead of running the automatic program."
 
-Example 1 (Dopamine Stacking):
-"Identify the exact moment you typically procrastinate on starting work - is it opening your laptop, starting a specific task, or sitting at your desk? Right before that moment, do something you genuinely enjoy for exactly 30 seconds: sip your favorite coffee, listen to 30 seconds of a song that energizes you, or look at a photo that makes you smile. The key is consistency - same enjoyable action, same timing, every single time. After 30 seconds, immediately transition into the work without any gap. Track this for one week and notice how your brain starts anticipating the work differently. After a week, you can reduce the pre-work activity to 10 seconds as the association strengthens."
-
-Example 2 (Pattern Interrupt for Bad Habits):
-"Choose the bad habit you want to break and identify the exact trigger point - the moment right before you reach for your phone, open social media, or grab junk food. At that trigger point, insert a completely unexpected physical disruption: stand up and walk to a different room, put on a specific song that requires you to stop what you're doing, or hold an ice cube for 10 seconds. The disruption must be unusual enough that your brain's autopilot can't ignore it. Do this every single time you catch the trigger for three days straight. Your brain will start pausing automatically at that trigger point, giving you a conscious choice instead of running the automatic program."
+Example 2 (Dopamine Stacking):
+"Pick one small thing you genuinely enjoy that takes less than 2 minutes: a specific song, a flavored drink, or a short video clip. For the next 7 days, ONLY allow yourself to have this enjoyable thing immediately before starting the task you've been avoiding. Set it up like a ritual: put on the song as you open your laptop, or take the first sip of the drink as you pick up your pen. Do not consume this enjoyable thing at any other time during these 7 days - this is critical for the association to form. After 7 consecutive pairings, your brain will start releasing dopamine when you begin the task itself, because it's learned to predict the reward is coming. You're training your motivation system the same way Pavlov trained his dogs, except you're doing it to yourself intentionally. By day 10, you should feel a small hit of motivation just from sitting down to start."
 
 Example 3 (Anxiety Breathing Protocol):
-"The moment you notice anxiety building - tight chest, racing thoughts, or shallow breathing - stop what you're doing completely. Take two sharp, quick inhales through your nose (like you're sniffing something twice quickly), then immediately exhale slowly through your mouth for a count of 5-8 seconds. The double inhale is critical - it needs to be two distinct sniffs, not one long breath. Repeat this breathing pattern 8-10 times consecutively, focusing only on the physical sensation of the breath. After completing the cycles, take 30 seconds to notice how your body feels different. Use this exact pattern every time you feel anxiety creeping in, and your nervous system will start responding faster each time."
+"The moment you notice anxiety building - tight chest, racing thoughts, or shallow breathing - stop what you're doing completely. Take two sharp, quick inhales through your nose (like you're sniffing something twice quickly), then immediately exhale slowly through your mouth for a count of 5-8 seconds. The double inhale is critical - it needs to be two distinct sniffs, not one long breath. Repeat this breathing pattern 8-10 times consecutively, focusing only on the physical sensation of the breath. After completing the cycles, take 30 seconds to notice how your body feels different. Use this exact pattern every time you feel anxiety creeping in, and your nervous system will start responding faster each time. After a week of consistent use, you'll notice the anxiety diminishing after just 2-3 breath cycles instead of 8-10."
 
 Example 4 (Visualization Practice):
-"Pick one specific task you've been avoiding and break it down to just the first 2 minutes of action - not the whole project, just the start. Close your eyes and spend 90 seconds mentally rehearsing those first 2 minutes in vivid detail: see yourself in the space where you'll do it, feel the physical sensations, hear the sounds, and watch yourself moving through each micro-step. Make it so detailed you could describe every movement. After the visualization, set a 2-minute timer and immediately do what you just imagined - don't think, just execute. Do this visualization-execution combo for the same task three days in a row. By day three, starting will feel eerily familiar because your brain has already practiced it multiple times."
+"Pick one specific task you've been avoiding and break it down to just the first 2 minutes of action - not the whole project, just the start. Close your eyes and spend 90 seconds mentally rehearsing those first 2 minutes in vivid detail: see yourself in the space where you'll do it, feel the physical sensations, hear the sounds, and watch yourself moving through each micro-step. Make it so detailed you could describe every movement. After the visualization, set a 2-minute timer and immediately do what you just imagined - don't think, just execute. Do this visualization-execution combo for the same task three days in a row. By day three, starting will feel eerily familiar because your brain has already practiced it multiple times. Your brain doesn't distinguish between vivid mental practice and actual practice, so you're pre-wiring the neural pathways."
 
 Example 5 (Focus Filtering):
 "Before starting any work session, write down one ultra-specific sentence describing exactly what success looks like for this session - not vague goals like 'make progress,' but concrete outcomes like 'draft the introduction section with three key points' or 'solve the first five client emails in my inbox.' Read this sentence out loud twice, emphasizing the specific words that define success. Place this written goal where you can see it throughout your work session. Set a timer for 25 minutes and work only on achieving that specific outcome, checking the goal statement whenever you feel your attention drifting. At the 25-minute mark, review what you accomplished against your specific statement, then decide whether to continue this task or switch. This trains your brain's attention filter to screen out everything except your defined target."
@@ -326,6 +353,9 @@ serve(async (req) => {
     }
 
     console.log('✅ User found:', user.id)
+    console.log('   Mood:', user.current_mood || 'neutral')
+    console.log('   Goal:', user.goal || 'improve mental performance')
+    console.log('   Struggle:', user.biggest_struggle || 'staying focused')
 
     // Check if today's hack already exists
     const today = new Date().toISOString().split('T')[0]
@@ -355,7 +385,7 @@ serve(async (req) => {
           neuroscience: todayHack.hack_neuroscience,
           personalization: todayHack.hack_personalization || '',
           barrier: user.main_struggle || 'focus',
-          isCompleted: !!todayHack.completed_at,
+          isCompleted: !todayHack.completed_at,
           audioUrls: [
             todayHack.audio_page1_url,
             todayHack.audio_page2_url,
