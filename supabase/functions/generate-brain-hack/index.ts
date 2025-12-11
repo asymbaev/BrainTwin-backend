@@ -52,7 +52,7 @@ async function generateAudio(text: string, voice: string = 'nova'): Promise<Uint
       model: 'tts-1',
       input: text,
       voice: voice,
-      speed: 0.90,
+      speed: 1.2,  // ✅ FIXED: Match text-to-speech speed (20% faster)
       response_format: 'mp3'
     }),
   })
@@ -80,30 +80,38 @@ async function generateRemainingAudioInBackground(
       `Here's what to do: ${brainHack.explanation}. Today's challenge: Try this when you face ${brainHack.barrier} today.`
     ]
 
-    const audioUrls: string[] = []
-    
-    for (let i = 0; i < texts.length; i++) {
+    // ✅ OPTIMIZED: Generate and upload pages 2-3 in PARALLEL (2x faster)
+    const audioPromises = texts.map(async (text, i) => {
       const pageNum = i + 2 // Pages 2 and 3
       console.log(`🔊 Generating audio for page ${pageNum}...`)
-      const audioData = await generateAudio(texts[i], 'onyx')
-      
-      const fileName = `${userId}/${dateStr}/page${pageNum}.mp3`
-      const { error: uploadError } = await supabaseClient.storage
-        .from('audio-files')
-        .upload(fileName, audioData, {
-          contentType: 'audio/mpeg',
-          upsert: true
-        })
-      
-      if (!uploadError) {
-        const { data: urlData } = supabaseClient.storage
+
+      try {
+        const audioData = await generateAudio(text, 'onyx')
+
+        const fileName = `${userId}/${dateStr}/page${pageNum}.mp3`
+        const { error: uploadError } = await supabaseClient.storage
           .from('audio-files')
-          .getPublicUrl(fileName)
-        
-        audioUrls.push(urlData.publicUrl)
-        console.log(`✅ Page ${pageNum} audio uploaded`)
+          .upload(fileName, audioData, {
+            contentType: 'audio/mpeg',
+            upsert: true,
+            cacheControl: '3600'  // ✅ Cache for 1 hour
+          })
+
+        if (!uploadError) {
+          const { data: urlData } = supabaseClient.storage
+            .from('audio-files')
+            .getPublicUrl(fileName)
+
+          console.log(`✅ Page ${pageNum} audio uploaded`)
+          return urlData.publicUrl
+        }
+      } catch (error) {
+        console.error(`❌ Failed to generate audio for page ${pageNum}:`, error)
       }
-    }
+      return null
+    })
+
+    const audioUrls = (await Promise.all(audioPromises)).filter(Boolean) as string[]
 
     // Update with pages 2-3 URLs
     const updateData: any = {}
@@ -273,7 +281,8 @@ Return ONLY valid JSON:
     .from('audio-files')
     .upload(page1FileName, page1Audio, {
       contentType: 'audio/mpeg',
-      upsert: true
+      upsert: true,
+      cacheControl: '3600'  // ✅ Cache for 1 hour
     })
   
   let page1Url = null
@@ -313,11 +322,71 @@ Return ONLY valid JSON:
   const taskId = insertData.id
   console.log('💾 Hack saved with page 1 audio')
 
-  // Generate pages 2-3 audio in background (non-blocking)
-  generateRemainingAudioInBackground(supabaseClient, userId, dateStr, brainHack, taskId)
+  // ✅ OPTION 1: Generate ALL audio files BEFORE returning (instant Listen mode)
+  console.log('🎙️ Generating pages 2-3 audio (waiting for completion)...')
 
-  // Return with page 1 audio URL
-  return { ...brainHack, audioUrls: page1Url ? [page1Url] : [] }
+  const texts = [
+    `Here's the brain hack: ${brainHack.neuroscience}. ${brainHack.personalization || ''}`,
+    `Here's what to do: ${brainHack.explanation}. Today's challenge: Try this when you face ${brainHack.barrier} today.`
+  ]
+
+  // Generate pages 2-3 in PARALLEL (faster than sequential)
+  const audioPromises = texts.map(async (text, i) => {
+    const pageNum = i + 2
+    console.log(`🔊 Generating audio for page ${pageNum}...`)
+
+    try {
+      const audioData = await generateAudio(text, 'onyx')
+      const fileName = `${userId}/${dateStr}/page${pageNum}.mp3`
+
+      const { error: uploadError } = await supabaseClient.storage
+        .from('audio-files')
+        .upload(fileName, audioData, {
+          contentType: 'audio/mpeg',
+          upsert: true,
+          cacheControl: '3600'
+        })
+
+      if (!uploadError) {
+        const { data: urlData } = supabaseClient.storage
+          .from('audio-files')
+          .getPublicUrl(fileName)
+
+        console.log(`✅ Page ${pageNum} audio uploaded`)
+        return { pageNum, url: urlData.publicUrl }
+      }
+    } catch (error) {
+      console.error(`❌ Failed to generate page ${pageNum}:`, error)
+    }
+    return null
+  })
+
+  const results = (await Promise.all(audioPromises)).filter(Boolean)
+
+  // Update database with pages 2-3 URLs
+  const updateData: any = {}
+  results.forEach(result => {
+    if (result && result.pageNum === 2) updateData.audio_page2_url = result.url
+    if (result && result.pageNum === 3) updateData.audio_page3_url = result.url
+  })
+
+  if (Object.keys(updateData).length > 0) {
+    await supabaseClient
+      .from('daily_tasks')
+      .update(updateData)
+      .eq('id', taskId)
+
+    console.log('✅ All 3 audio files ready!')
+  }
+
+  // Return with ALL 3 audio URLs
+  const allAudioUrls = [
+    page1Url,
+    results.find(r => r?.pageNum === 2)?.url,
+    results.find(r => r?.pageNum === 3)?.url
+  ].filter(Boolean)
+
+  return { ...brainHack, audioUrls: allAudioUrls }
 }
 
 // Main serve function
