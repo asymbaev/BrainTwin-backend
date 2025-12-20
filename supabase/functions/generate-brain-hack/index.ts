@@ -1,10 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// NOTE: CORS headers removed for security (iOS app doesn't need CORS)
+// If you add a web app later, uncomment and set to your specific domain:
+// const corsHeaders = {
+//   'Access-Control-Allow-Origin': 'https://yourdomain.com',
+//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// }
 
 interface HackRequest {
   userId: string
@@ -391,9 +393,10 @@ Return ONLY valid JSON:
 
 // Main serve function
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  // Native iOS app doesn't require CORS preflight handling
+  // if (req.method === 'OPTIONS') {
+  //   return new Response('ok', { headers: corsHeaders })
+  // }
 
   try {
     const { userId }: HackRequest = await req.json()
@@ -454,7 +457,7 @@ serve(async (req) => {
           neuroscience: todayHack.hack_neuroscience,
           personalization: todayHack.hack_personalization || '',
           barrier: user.main_struggle || 'focus',
-          isCompleted: !todayHack.completed_at,
+          isCompleted: !!todayHack.completed_at,
           audioUrls: [
             todayHack.audio_page1_url,
             todayHack.audio_page2_url,
@@ -462,7 +465,7 @@ serve(async (req) => {
           ].filter(Boolean)
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           status: 200
         }
       )
@@ -499,7 +502,7 @@ serve(async (req) => {
         audioUrls: generatedHack.audioUrls || []
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 200
       }
     )
@@ -511,7 +514,7 @@ serve(async (req) => {
         details: error.toString()
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 500
       }
     )

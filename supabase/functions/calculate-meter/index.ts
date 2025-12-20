@@ -6,10 +6,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// NOTE: CORS headers removed for security (iOS app doesn't need CORS)
+// If you add a web app later, uncomment and set to your specific domain:
+// const corsHeaders = {
+//   'Access-Control-Allow-Origin': 'https://yourdomain.com',
+//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// }
 
 interface MeterRequest {
   userId: string
@@ -26,7 +28,7 @@ interface MeterResponse {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: {} })
   }
 
   try {
@@ -148,7 +150,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(response),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 200 
       }
     )
@@ -158,7 +160,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 500 
       }
     )

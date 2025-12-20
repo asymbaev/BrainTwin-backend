@@ -1,9 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// NOTE: CORS headers removed for security (iOS app doesn't need CORS)
+// If you add a web app later, uncomment and set to your specific domain:
+// const corsHeaders = {
+//   'Access-Control-Allow-Origin': 'https://yourdomain.com',
+//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// }
 
 interface TTSRequest {
   text: string
@@ -12,7 +14,7 @@ interface TTSRequest {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: {} })
   }
 
   try {
@@ -54,7 +56,6 @@ const response = await fetch('https://api.openai.com/v1/audio/speech', {
     // Return audio file
     return new Response(audioData, {
       headers: {
-        ...corsHeaders,
         'Content-Type': 'audio/mpeg',
       },
       status: 200,
@@ -67,7 +68,7 @@ const response = await fetch('https://api.openai.com/v1/audio/speech', {
         error: error.message,
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 500,
       }
     )

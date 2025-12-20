@@ -2,10 +2,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// NOTE: CORS headers removed for security (iOS app doesn't need CORS)
+// If you add a web app later, uncomment and set to your specific domain:
+// const corsHeaders = {
+//   'Access-Control-Allow-Origin': 'https://yourdomain.com',
+//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// }
 
 interface User {
   id: string
@@ -16,7 +18,7 @@ interface User {
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: {} })
   }
 
   console.log('🕐 CRON JOB STARTED: Generating daily hacks for all users...')
@@ -45,7 +47,7 @@ serve(async (req) => {
       console.log('⚠️ No users found')
       return new Response(
         JSON.stringify({ success: true, message: 'No users to process', generatedCount: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { 'Content-Type': 'application/json' } }
       )
     }
 
@@ -112,7 +114,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(summary),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 200 
       }
     )
@@ -126,7 +128,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 500 
       }
     )
